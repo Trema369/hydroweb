@@ -1,5 +1,6 @@
 'use client';
 
+import useSensorWebSocket from '@/components/hooks/useSensorWebSocket';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -9,6 +10,9 @@ import StepIndicator from '@/components/web/StepIndicator';
 import { useState } from 'react';
 export default function WaterAnalysis() {
     const [step, setStep] = useState(1);
+    const { ph, temperature, turbidity } = useSensorWebSocket(
+        'ws://127.0.0.1:8000/ws'
+    );
     const totalSteps = 3;
 
     function nextStep() {
@@ -88,17 +92,17 @@ export default function WaterAnalysis() {
                                     </h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mx-auto">
                                         <Gauge
-                                            value={95}
+                                            value={ph}
                                             label="ph"
                                             size={250}
                                         />
                                         <Gauge
-                                            value={35}
+                                            value={temperature}
                                             label="Temp"
                                             size={250}
                                         />
                                         <Gauge
-                                            value={45}
+                                            value={turbidity}
                                             label="Tubidity"
                                             size={250}
                                         />
