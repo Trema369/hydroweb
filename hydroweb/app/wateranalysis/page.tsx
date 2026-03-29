@@ -10,7 +10,8 @@ import StepIndicator from '@/components/web/StepIndicator';
 import { useState } from 'react';
 export default function WaterAnalysis() {
     const [step, setStep] = useState(1);
-    const { ph, temperature, turbidity, tds } = useSensorWebSocket();
+    const { data, analysis } = useSensorWebSocket();
+    const { ph, temperature, turbidity, tds } = data;
     const totalSteps = 3;
 
     function nextStep() {
