@@ -1,6 +1,6 @@
 'use client';
 
-import { ProgressWithLabel } from './stepprogress.tsx';
+import { ProgressWithLabel } from './stepprogress';
 
 export default function StepIndicator({
     currentStep,
