@@ -95,7 +95,7 @@ export default function WaterAnalysis() {
                                             size={250}
                                         />
                                         <Gauge
-                                            value={temperature}
+                                            value={temperature ?? 0}
                                             label="Temp"
                                             size={250}
                                         />
