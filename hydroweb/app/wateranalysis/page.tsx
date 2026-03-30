@@ -2,7 +2,6 @@
 
 import useSensorWebSocket from '@/components/hooks/useSensorWebSocket';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Gauge from '@/components/web/Guage';
@@ -21,12 +20,73 @@ import {
     CheckCircle2,
     Info,
     Loader2,
+    ChevronDown,
+    HelpCircle,
 } from 'lucide-react';
 
 const VPS_ANALYZE_URL = 'https://hydro-api.tremaz.dev/analyze';
 
+// Per-sensor WHO/standard safe ranges
+const SENSOR_CONFIG = {
+    ph: {
+        min: 0,
+        max: 14,
+        safeMin: 6.5,
+        safeMax: 8.5,
+        cautionMin: 5.5,
+        cautionMax: 9.5,
+    },
+    temp: {
+        min: 0,
+        max: 50,
+        safeMin: 10,
+        safeMax: 25,
+        cautionMin: 5,
+        cautionMax: 35,
+    },
+    turbidity: {
+        min: 0,
+        max: 500,
+        safeMin: 0,
+        safeMax: 4,
+        cautionMin: 0,
+        cautionMax: 25,
+    },
+    tds: {
+        min: 0,
+        max: 1000,
+        safeMin: 0,
+        safeMax: 300,
+        cautionMin: 0,
+        cautionMax: 600,
+    },
+};
+
+const QA_ITEMS = [
+    {
+        q: 'What is pH and why does it matter?',
+        a: 'pH measures how acidic or alkaline water is on a scale of 0–14. Safe drinking water should be between 6.5 and 8.5. Values outside this range can indicate contamination and may cause health issues or corrode pipes.',
+    },
+    {
+        q: 'What is turbidity?',
+        a: 'Turbidity measures how clear the water is in NTU (Nephelometric Turbidity Units). High turbidity means the water is cloudy, which can indicate sediment, bacteria, or chemical contamination. WHO recommends less than 4 NTU for drinking water.',
+    },
+    {
+        q: 'What does TDS mean?',
+        a: 'TDS stands for Total Dissolved Solids — the concentration of dissolved minerals, salts, and metals in the water. Below 300 ppm is excellent. Above 600 ppm may affect taste and safety.',
+    },
+    {
+        q: 'Why is temperature monitored?',
+        a: 'Water temperature affects the growth of bacteria and the effectiveness of disinfection. Warmer water can promote pathogen growth. Ideal drinking water temperature is between 10–25°C.',
+    },
+    {
+        q: 'How does the AI analysis work?',
+        a: 'When you click Run Analysis, the readings are sent to a Mistral AI model which evaluates all parameters together. It returns a safety score (0–10), a status, an overview, detected issues, and recommended actions.',
+    },
+];
+
 function StepBar({ step }: { step: number }) {
-    const steps = ['Collect Sample', 'Analyse', 'Results'];
+    const steps = ['Live Readings', 'Analysing', 'Results'];
     return (
         <div className="flex items-center gap-2 w-full">
             {steps.map((label, i) => {
@@ -120,6 +180,46 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
+function QACard() {
+    const [open, setOpen] = useState<number | null>(null);
+    return (
+        <Card>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <HelpCircle className="h-4 w-4 text-blue-500" />
+                    Water Quality FAQ
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 p-3">
+                {QA_ITEMS.map((item, i) => (
+                    <div
+                        key={i}
+                        className="rounded-lg border border-border overflow-hidden"
+                    >
+                        <button
+                            onClick={() => setOpen(open === i ? null : i)}
+                            className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium hover:bg-muted/50 transition-colors"
+                        >
+                            <span>{item.q}</span>
+                            <ChevronDown
+                                className={cn(
+                                    'h-4 w-4 text-muted-foreground flex-shrink-0 ml-2 transition-transform duration-200',
+                                    open === i ? 'rotate-180' : ''
+                                )}
+                            />
+                        </button>
+                        {open === i && (
+                            <div className="px-4 pb-3 text-sm text-muted-foreground leading-relaxed border-t border-border pt-3 bg-muted/20">
+                                {item.a}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function WaterAnalysis() {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -128,10 +228,9 @@ export default function WaterAnalysis() {
 
     async function handleAnalyse() {
         setLoading(true);
+        setStep(2);
         try {
             await fetch(VPS_ANALYZE_URL, { method: 'POST' });
-            // Move to results once analysis arrives via WebSocket
-            // Poll until analysis is available
             const wait = () =>
                 new Promise<void>((resolve) => {
                     const check = setInterval(() => {
@@ -155,7 +254,7 @@ export default function WaterAnalysis() {
     }
 
     return (
-        <div className="min-h-screen w-full px-4 md:px-8 lg:px-16 pt-24 pb-6 flex flex-col gap-6">
+        <div className="min-h-screen w-full px-4 md:px-8 lg:px-16 pt-24 pb-6 flex flex-col gap-6 max-w-7xl mx-auto">
             {/* Step bar */}
             <div className="flex justify-center">
                 <div className="w-full max-w-md">
@@ -196,89 +295,95 @@ export default function WaterAnalysis() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Info panel */}
-                        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                                    <Info className="h-4 w-4 text-blue-500" />
-                                    Sensor Guide
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <SensorRow
-                                        label="pH"
-                                        value={ph}
-                                        unit=""
-                                        icon={
-                                            <FlaskConical className="h-3.5 w-3.5" />
-                                        }
-                                    />
-                                    <SensorRow
-                                        label="Temperature"
-                                        value={temperature}
-                                        unit="°C"
-                                        icon={
-                                            <Thermometer className="h-3.5 w-3.5" />
-                                        }
-                                    />
-                                    <SensorRow
-                                        label="Turbidity"
-                                        value={turbidity}
-                                        unit="NTU"
-                                        icon={<Waves className="h-3.5 w-3.5" />}
-                                    />
-                                    <SensorRow
-                                        label="TDS"
-                                        value={tds}
-                                        unit="ppm"
-                                        icon={
-                                            <Activity className="h-3.5 w-3.5" />
-                                        }
-                                    />
-                                </div>
-                                <Separator />
-                                <div className="space-y-2">
-                                    {[
-                                        {
-                                            color: 'bg-emerald-500',
-                                            label: 'Safe / Normal',
-                                        },
-                                        {
-                                            color: 'bg-yellow-400',
-                                            label: 'Caution / Moderate',
-                                        },
-                                        {
-                                            color: 'bg-red-500',
-                                            label: 'Danger / Critical',
-                                        },
-                                    ].map(({ color, label }) => (
-                                        <div
-                                            key={label}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <span
-                                                className={cn(
-                                                    'w-3 h-3 rounded-full flex-shrink-0',
-                                                    color
-                                                )}
-                                            />
-                                            <span className="text-xs text-muted-foreground">
-                                                {label}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/* Left column — info + FAQ */}
+                        <div className="flex flex-col gap-4">
+                            {/* Sensor Guide */}
+                            <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                        <Info className="h-4 w-4 text-blue-500" />
+                                        Current Readings
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <SensorRow
+                                            label="pH"
+                                            value={ph}
+                                            unit=""
+                                            icon={
+                                                <FlaskConical className="h-3.5 w-3.5" />
+                                            }
+                                        />
+                                        <SensorRow
+                                            label="Temperature"
+                                            value={temperature}
+                                            unit="°C"
+                                            icon={
+                                                <Thermometer className="h-3.5 w-3.5" />
+                                            }
+                                        />
+                                        <SensorRow
+                                            label="Turbidity"
+                                            value={turbidity}
+                                            unit="NTU"
+                                            icon={
+                                                <Waves className="h-3.5 w-3.5" />
+                                            }
+                                        />
+                                        <SensorRow
+                                            label="TDS"
+                                            value={tds}
+                                            unit="ppm"
+                                            icon={
+                                                <Activity className="h-3.5 w-3.5" />
+                                            }
+                                        />
+                                    </div>
+                                    <Separator />
+                                    <div className="space-y-2">
+                                        {[
+                                            {
+                                                color: 'bg-emerald-500',
+                                                label: 'Safe / Normal',
+                                            },
+                                            {
+                                                color: 'bg-yellow-400',
+                                                label: 'Caution / Moderate',
+                                            },
+                                            {
+                                                color: 'bg-red-500',
+                                                label: 'Danger / Critical',
+                                            },
+                                        ].map(({ color, label }) => (
+                                            <div
+                                                key={label}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <span
+                                                    className={cn(
+                                                        'w-3 h-3 rounded-full flex-shrink-0',
+                                                        color
+                                                    )}
+                                                />
+                                                <span className="text-xs text-muted-foreground">
+                                                    {label}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                        {/* Gauges */}
+                            {/* FAQ */}
+                        </div>
+
                         {/* Gauges */}
                         <Card className="lg:col-span-2">
                             <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-sm font-semibold">
-                                        Live Readings
+                                        Sensor Gauges
                                     </CardTitle>
                                     <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -287,39 +392,95 @@ export default function WaterAnalysis() {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-2 gap-6 place-items-center py-4">
+                                <div className="grid grid-cols-2 gap-4 place-items-center py-2">
                                     <Gauge
                                         value={ph}
                                         label="pH"
-                                        size={220}
-                                        maxValue={14}
+                                        size={200}
+                                        minValue={SENSOR_CONFIG.ph.min}
+                                        maxValue={SENSOR_CONFIG.ph.max}
+                                        safeMin={SENSOR_CONFIG.ph.safeMin}
+                                        safeMax={SENSOR_CONFIG.ph.safeMax}
+                                        cautionMin={SENSOR_CONFIG.ph.cautionMin}
+                                        cautionMax={SENSOR_CONFIG.ph.cautionMax}
                                     />
                                     <Gauge
                                         value={temperature ?? 0}
                                         label="Temp"
                                         unit="°C"
-                                        size={220}
-                                        maxValue={50}
+                                        size={200}
+                                        minValue={SENSOR_CONFIG.temp.min}
+                                        maxValue={SENSOR_CONFIG.temp.max}
+                                        safeMin={SENSOR_CONFIG.temp.safeMin}
+                                        safeMax={SENSOR_CONFIG.temp.safeMax}
+                                        cautionMin={
+                                            SENSOR_CONFIG.temp.cautionMin
+                                        }
+                                        cautionMax={
+                                            SENSOR_CONFIG.temp.cautionMax
+                                        }
                                     />
                                     <Gauge
                                         value={turbidity}
                                         label="Turbidity"
                                         unit="NTU"
-                                        size={220}
-                                        maxValue={500}
+                                        size={200}
+                                        minValue={SENSOR_CONFIG.turbidity.min}
+                                        maxValue={SENSOR_CONFIG.turbidity.max}
+                                        safeMin={
+                                            SENSOR_CONFIG.turbidity.safeMin
+                                        }
+                                        safeMax={
+                                            SENSOR_CONFIG.turbidity.safeMax
+                                        }
+                                        cautionMin={
+                                            SENSOR_CONFIG.turbidity.cautionMin
+                                        }
+                                        cautionMax={
+                                            SENSOR_CONFIG.turbidity.cautionMax
+                                        }
                                     />
                                     <Gauge
                                         value={tds}
                                         label="TDS"
                                         unit="ppm"
-                                        size={220}
-                                        maxValue={1000}
+                                        size={200}
+                                        minValue={SENSOR_CONFIG.tds.min}
+                                        maxValue={SENSOR_CONFIG.tds.max}
+                                        safeMin={SENSOR_CONFIG.tds.safeMin}
+                                        safeMax={SENSOR_CONFIG.tds.safeMax}
+                                        cautionMin={
+                                            SENSOR_CONFIG.tds.cautionMin
+                                        }
+                                        cautionMax={
+                                            SENSOR_CONFIG.tds.cautionMax
+                                        }
                                     />
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
+                    <QACard />
                 </div>
+            )}
+
+            {/* Step 2 — Loading */}
+            {step === 2 && (
+                <Card className="flex flex-col items-center justify-center p-16 gap-6 text-center">
+                    <div className="relative">
+                        <div className="w-16 h-16 rounded-full border-4 border-blue-100 dark:border-blue-900/40" />
+                        <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+                    </div>
+                    <div>
+                        <p className="text-lg font-semibold">
+                            Analysing water quality...
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Mistral AI is evaluating your sensor readings. This
+                            takes a few seconds.
+                        </p>
+                    </div>
+                </Card>
             )}
 
             {/* Step 3 — Results */}
@@ -356,8 +517,8 @@ export default function WaterAnalysis() {
 
                     {analysis ? (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Score card */}
-                            <Card className="flex flex-col items-center justify-center p-6 gap-4 bg-card">
+                            {/* Score */}
+                            <Card className="flex flex-col items-center justify-center p-6 gap-4">
                                 <ScoreChart value={analysis.score} size={180} />
                                 <div className="text-center space-y-2">
                                     <StatusBadge status={analysis.status} />
@@ -367,9 +528,7 @@ export default function WaterAnalysis() {
                                 </div>
                             </Card>
 
-                            {/* Overview + details */}
                             <div className="lg:col-span-2 flex flex-col gap-4">
-                                {/* Overview */}
                                 <Card>
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-semibold">
@@ -383,12 +542,11 @@ export default function WaterAnalysis() {
                                     </CardContent>
                                 </Card>
 
-                                {/* Issues */}
                                 {analysis.issues.length > 0 && (
                                     <Card className="border-orange-200 dark:border-orange-900/50 bg-orange-50 dark:bg-orange-950/20">
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-orange-700 dark:text-orange-400">
-                                                <AlertTriangle className="h-4 w-4" />
+                                                <AlertTriangle className="h-4 w-4" />{' '}
                                                 Detected Issues
                                             </CardTitle>
                                         </CardHeader>
@@ -410,12 +568,11 @@ export default function WaterAnalysis() {
                                     </Card>
                                 )}
 
-                                {/* Recommendations */}
                                 {analysis.recommended_actions.length > 0 && (
                                     <Card className="border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20">
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-                                                <CheckCircle2 className="h-4 w-4" />
+                                                <CheckCircle2 className="h-4 w-4" />{' '}
                                                 Recommended Actions
                                             </CardTitle>
                                         </CardHeader>
@@ -437,7 +594,6 @@ export default function WaterAnalysis() {
                                     </Card>
                                 )}
 
-                                {/* Raw readings summary */}
                                 <Card>
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-semibold">
@@ -496,11 +652,11 @@ export default function WaterAnalysis() {
                             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                             <div>
                                 <p className="font-semibold">
-                                    Waiting for analysis results...
+                                    Waiting for results...
                                 </p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    The Pi is processing your request. This may
-                                    take a few seconds.
+                                    The Pi is still processing. This may take a
+                                    few more seconds.
                                 </p>
                             </div>
                             <Button

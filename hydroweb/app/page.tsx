@@ -24,6 +24,7 @@ import {
     Globe,
     CheckCircle2,
 } from 'lucide-react';
+
 function FeatureCard({
     icon,
     title,
@@ -140,11 +141,9 @@ export default function Home() {
 
     return (
         <main className="min-h-screen w-full bg-background text-foreground flex flex-col relative">
-            {/* Global background blobs */}
-            <div className="fixed top-0 right-0 w-[600px] h-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-3xl pointer-events-none z-0" />
-            <div className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-orange-500/5 dark:bg-orange-500/8 blur-3xl pointer-events-none z-0" />
+            {/* Hero */}
             <section className="w-full px-6 md:px-12 lg:px-20 pt-32 pb-24 relative overflow-hidden">
-                <div className="relative z-10 flex flex-col gap-8">
+                <div className="max-w-7xl mx-auto w-full relative z-10 flex flex-col gap-8">
                     <div className="space-y-5 max-w-3xl">
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05]">
                             Know if your water{' '}
@@ -208,7 +207,7 @@ export default function Home() {
 
             {/* How it works */}
             <section className="w-full border-y border-border bg-background py-20">
-                <div className="w-full px-6 md:px-12 lg:px-20 space-y-10">
+                <div className="max-w-7xl mx-auto w-full px-6 md:px-12 lg:px-20 space-y-10">
                     <div className="space-y-2">
                         <Badge variant="outline" className="text-xs">
                             How it works
@@ -244,119 +243,74 @@ export default function Home() {
             </section>
 
             {/* Features */}
-            <section className="w-full px-6 md:px-12 lg:px-20 py-20 space-y-10">
-                <div className="space-y-2">
-                    <Badge variant="outline" className="text-xs">
-                        Capabilities
-                    </Badge>
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                        What we measure.
-                    </h2>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {features.map((f) => (
-                        <FeatureCard key={f.title} {...f} />
-                    ))}
+            <section className="w-full py-20">
+                <div className="max-w-7xl mx-auto w-full px-6 md:px-12 lg:px-20 space-y-10">
+                    <div className="space-y-2">
+                        <Badge variant="outline" className="text-xs">
+                            Capabilities
+                        </Badge>
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                            What we measure.
+                        </h2>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {features.map((f) => (
+                            <FeatureCard key={f.title} {...f} />
+                        ))}
+                    </div>
                 </div>
             </section>
 
             {/* CTA */}
-            <section className="w-full px-6 md:px-12 lg:px-20 pb-20">
-                <div className="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/30 dark:to-[#0d0d0d] p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-                    <div
-                        className="absolute inset-0 pointer-events-none opacity-40"
-                        style={{
-                            background:
-                                'radial-gradient(ellipse at 0% 50%, #3b82f615 0%, transparent 60%)',
-                        }}
-                    />
-                    <div className="relative z-10 space-y-4 max-w-md">
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                            Ready to test your water?
-                        </h2>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                            Open the live dashboard, wait for the gauges to
-                            stabilise, then run an AI analysis in one click.
-                        </p>
-                        <ul className="space-y-1.5 pt-1">
-                            {[
-                                'No account required',
-                                'Results in under 10 seconds',
-                                'Actionable recommendations',
-                            ].map((item) => (
-                                <li
-                                    key={item}
-                                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                                >
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="relative z-10 flex-shrink-0">
-                        <Link
-                            href="/wateranalysis"
-                            className={cn(
-                                buttonVariants({ size: 'lg' }),
-                                'bg-blue-600 hover:bg-blue-500 text-white font-semibold gap-2'
-                            )}
-                        >
-                            Open Dashboard
-                            <ArrowRight className="h-4 w-4" />
-                        </Link>
+            <section className="w-full pb-20">
+                <div className="max-w-7xl mx-auto w-full px-6 md:px-12 lg:px-20">
+                    <div className="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/30 dark:to-[#0d0d0d] p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                        <div
+                            className="absolute inset-0 pointer-events-none opacity-40"
+                            style={{
+                                background:
+                                    'radial-gradient(ellipse at 0% 50%, #3b82f615 0%, transparent 60%)',
+                            }}
+                        />
+                        <div className="relative z-10 space-y-4 max-w-md">
+                            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                                Ready to test your water?
+                            </h2>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Open the live dashboard, wait for the gauges to
+                                stabilise, then run an AI analysis in one click.
+                            </p>
+                            <ul className="space-y-1.5 pt-1">
+                                {[
+                                    'No account required',
+                                    'Results in under 10 seconds',
+                                    'Actionable recommendations',
+                                ].map((item) => (
+                                    <li
+                                        key={item}
+                                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                                    >
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="relative z-10 flex-shrink-0">
+                            <Link
+                                href="/wateranalysis"
+                                className={cn(
+                                    buttonVariants({ size: 'lg' }),
+                                    'bg-blue-600 hover:bg-blue-500 text-white font-semibold gap-2'
+                                )}
+                            >
+                                Open Dashboard
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>
-
-            {/* Footer */}
-            <footer className="w-full border-t border-border bg-background mt-auto">
-                <div className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-2">
-                        <Droplets className="h-5 w-5 text-blue-500" />
-                        <span className="font-extrabold text-base">
-                            <span className="text-blue-500">Hydro</span>
-                            <span className="text-orange-500">Pulse</span>
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                            Water Quality Monitor
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <Link
-                            href="/wateranalysis"
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            Dashboard
-                        </Link>
-                        <Link
-                            href="/wateranalysis"
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            Water Analysis
-                        </Link>
-                        <Link
-                            href="#"
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <Github className="h-4 w-4" />
-                        </Link>
-                        <Link
-                            href="#"
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <Globe className="h-4 w-4" />
-                        </Link>
-                    </div>
-                </div>
-                <Separator />
-                <div className="w-full px-6 md:px-12 lg:px-20 py-4">
-                    <p className="text-xs text-muted-foreground">
-                        © {new Date().getFullYear()} HydroPulse. Built for
-                        science fair.
-                    </p>
-                </div>
-            </footer>
         </main>
     );
 }
